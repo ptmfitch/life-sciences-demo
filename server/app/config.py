@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+asyncpg://biotest:biotest@127.0.0.1:5432/biotest"
     telemetry_dir: str = str(ROOT / "data" / "telemetry")
-    demo_speed: float = 12.0
+    demo_speed: float = 1.0
     max_concurrent_runs: int = 12
     max_runtime_minutes: int = 30
     rows_per_file: int = 60
