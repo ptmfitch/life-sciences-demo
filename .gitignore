@@ -224,3 +224,7 @@ node_modules/
 web/dist/
 .DS_Store
 *.log
+
+# Keep Vite/React client helpers (Python template ignores lib/)
+!web/src/lib/
+!web/src/lib/**
