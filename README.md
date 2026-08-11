@@ -45,6 +45,10 @@ Open **http://localhost:5173**.
 6. Open **Dashboards** and refresh charts.
 7. Rescan and load again — already-ingested files are skipped.
 
+## Simulation speed
+
+`DEMO_SPEED` controls wall-clock pace (`tick_interval_seconds = 1 / DEMO_SPEED`). The default is **`DEMO_SPEED=1`** (one simulated reading per wall-clock second), so Monitor tiles / SSE update about once per second. Raise it (e.g. `12`) only when you want a faster demo; a full `MAX_RUNTIME_MINUTES=30` run then finishes sooner.
+
 ## Editing live during the demo
 
 The API runs with `--reload`. Active runs **auto-resume** from Postgres checkpoints after a restart (deterministic simulator). The UI SSE connection reconnects and receives a full snapshot. Vite HMR hot-swaps frontend edits.
