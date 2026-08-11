@@ -2,15 +2,15 @@
 name: plan-to-tickets
 description: >-
   Convert Cursor plan-mode output into detailed Jira tickets in PLSD that a
-  cloud agent can implement without extra context. Use when the user asks to
-  break a plan into tickets, create Jira work from a plan, turn plan mode into
-  backlog items, or prepare cloud-agent-ready issues for
-  fe-anysphere-demo / PLSD.
+  cloud agent can implement without extra context, then notify Slack when new
+  To Do tickets are ready. Use when the user asks to break a plan into tickets,
+  create Jira work from a plan, turn plan mode into backlog items, or prepare
+  cloud-agent-ready issues for fe-anysphere-demo / PLSD.
 ---
 
 # Plan to tickets
 
-Turn an approved (or draft) Cursor plan into **cloud-agent-ready** Jira issues in **PLSD**.
+Turn an approved (or draft) Cursor plan into **cloud-agent-ready** Jira issues in **PLSD**, then ping Slack that new **To Do** work is ready.
 
 ## Defaults (do not ask unless overridden)
 
@@ -21,9 +21,11 @@ Turn an approved (or draft) Cursor plan into **cloud-agent-ready** Jira issues i
 | Project | `PLSD` |
 | Board | https://fe-anysphere-demo.atlassian.net/jira/software/projects/PLSD/boards/1041 |
 | Status | **To Do** (new issues land here by default; do not leave in other statuses) |
-| MCP | `user-Atlassian-MCP-Server` (`createJiraIssue`, etc.) |
+| Jira MCP | `user-Atlassian-MCP-Server` (`createJiraIssue`, etc.) |
+| Slack MCP | `plugin-slack-slack` (`slack_send_message`) |
+| Slack channel | `C0BQB2AACRE` ([channel archive](https://cursor-solutions.slack.com/archives/C0BQB2AACRE)) |
 
-If the user pastes a different project/board URL, use that instead.
+If the user pastes a different project/board or Slack channel URL, use that instead.
 
 ## When to run
 
@@ -37,8 +39,9 @@ Progress:
 - [ ] 1. Load plan source
 - [ ] 2. Decompose into cloud-agent-sized tickets (internally)
 - [ ] 3. Present breakdown; wait for confirmation (unless user said create now)
-- [ ] 4. Create parent issue, then children in PLSD
-- [ ] 5. Return table of keys + links (board + browse URLs)
+- [ ] 4. Create parent issue, then children in PLSD (To Do)
+- [ ] 5. Slack-notify channel C0BQB2AACRE that new To Do tickets are ready
+- [ ] 6. Return table of keys + links (board + browse URLs) and Slack message link
 ```
 
 ### 1. Load plan source
@@ -102,6 +105,7 @@ Proposed PLSD backlog (To Do):
 1. [Subtask|Task|Bug] <summary> — <one-line scope>
 2. ...
 
+After create, will notify Slack C0BQB2AACRE.
 Create these in PLSD?
 ```
 
@@ -117,7 +121,35 @@ Revise if they ask; then create.
 
 Do not assign people unless asked. Do not transition to In Progress.
 
-### 5. Summary output
+### 5. Slack notify (required after To Do tickets exist)
+
+**When:** Immediately after step 4 succeeds (at least one new issue in **To Do**). Skip only if the user explicitly said not to notify Slack.
+
+**How:** Call `slack_send_message` on `plugin-slack-slack`:
+
+- `channel_id`: `C0BQB2AACRE`
+- `unfurl_app_links`: `true` (Jira link previews when available)
+- `message`: short channel post (see template below)
+
+Do **not** use `slack_send_message_draft` for this step once ticket creation was already confirmed—posting the ready-for-pickup notice is part of this skill’s completion. If Slack fails, retry once; then report the failure in the summary and still return the Jira links.
+
+**Message template** (markdown; no `#` headers — Slack MCP does not support them well):
+
+```markdown
+**PLSD To Do ready for cloud agents**
+
+Parent: [PLSD-n](https://fe-anysphere-demo.atlassian.net/browse/PLSD-n) — <parent summary>
+
+New tickets:
+- [PLSD-a](https://fe-anysphere-demo.atlassian.net/browse/PLSD-a) — <summary>
+- [PLSD-b](https://fe-anysphere-demo.atlassian.net/browse/PLSD-b) — <summary>
+
+Board: https://fe-anysphere-demo.atlassian.net/jira/software/projects/PLSD/boards/1041
+```
+
+List **every** newly created issue (parent + children). Keep the body under ~5000 characters.
+
+### 6. Summary output
 
 Return a compact table:
 
@@ -125,7 +157,7 @@ Return a compact table:
 |-----|------|---------|-----|
 | PLSD-n | … | … | browse link |
 
-Include the [board link](https://fe-anysphere-demo.atlassian.net/jira/software/projects/PLSD/boards/1041). Mention that tickets are written for cloud-agent pickup.
+Include the [board link](https://fe-anysphere-demo.atlassian.net/jira/software/projects/PLSD/boards/1041), the Slack message permalink from `slack_send_message`, and note that tickets are written for cloud-agent pickup.
 
 ## Writing rules for ticket bodies
 
@@ -143,3 +175,5 @@ Include the [board link](https://fe-anysphere-demo.atlassian.net/jira/software/p
 - Creating issues outside PLSD without user override
 - Skipping confirmation when the user did not ask to create immediately
 - Relying on chat context the cloud agent will not have
+- Creating tickets in To Do but forgetting the Slack notify to `C0BQB2AACRE`
+- Notifying Slack before issues exist or while they are not in To Do
