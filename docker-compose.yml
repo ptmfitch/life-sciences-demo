@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: biotest
+      POSTGRES_PASSWORD: biotest
+      POSTGRES_DB: biotest
+    ports:
+      - "5432:5432"
+    volumes:
+      - biotest_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U biotest -d biotest"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  biotest_pg:

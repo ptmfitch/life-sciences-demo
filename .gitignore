@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Demo app
+data/telemetry/*.csv
+!data/telemetry/.gitkeep
+node_modules/
+web/dist/
+.DS_Store
+*.log
