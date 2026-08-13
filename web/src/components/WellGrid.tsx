@@ -11,6 +11,23 @@ function cellColor(well?: WellState) {
   return `rgb(${r},${g},${b})`;
 }
 
+function legendSwatch(intensity: number) {
+  return cellColor({
+    well_id: "",
+    optical_density: intensity,
+    fluorescence_rfu: intensity * 700,
+    activity_index: 0,
+  });
+}
+
+function wellAriaLabel(id: string, well?: WellState) {
+  if (!well) return `${id}: empty`;
+  const od = well.optical_density?.toFixed(3) ?? "—";
+  const fluo = well.fluorescence_rfu?.toFixed(0) ?? "—";
+  const activity = well.activity_index?.toFixed(1) ?? "—";
+  return `${id}: OD ${od}, fluorescence ${fluo}, activity ${activity}`;
+}
+
 export function WellGrid({
   wells,
   wellCount = 24,
@@ -29,7 +46,7 @@ export function WellGrid({
 
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wide text-muted">
+      <div className="mb-1 flex items-center justify-between text-xs uppercase tracking-wide text-muted">
         <span>Synthetic assay panel</span>
         <span>
           {rows}×{cols} wells
@@ -40,14 +57,45 @@ export function WellGrid({
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
         title="Synthetic visualisation — not a scientific simulator"
       >
-        {labels.map((id) => (
-          <div
-            key={id}
-            className="aspect-square rounded-full border border-white/60 shadow-inner"
-            style={{ background: cellColor(byId.get(id)) }}
-            title={`${id}: OD ${byId.get(id)?.optical_density ?? "—"}`}
-          />
-        ))}
+        {labels.map((id) => {
+          const well = byId.get(id);
+          return (
+            <div
+              key={id}
+              role="img"
+              className="aspect-square rounded-full border border-white/60 shadow-inner"
+              style={{ background: cellColor(well) }}
+              title={`${id}: OD ${well?.optical_density ?? "—"}`}
+              aria-label={wellAriaLabel(id, well)}
+            />
+          );
+        })}
+      </div>
+      <div className="mt-2">
+        <div className="flex items-center gap-2 text-xs text-muted">
+          <span>Low</span>
+          <div className="flex flex-1 items-center gap-1">
+            <span
+              className="h-3 flex-1 rounded-sm border border-line"
+              style={{ background: legendSwatch(0) }}
+              title="Low"
+            />
+            <span
+              className="h-3 flex-1 rounded-sm border border-line"
+              style={{ background: legendSwatch(0.5) }}
+              title="Mid"
+            />
+            <span
+              className="h-3 flex-1 rounded-sm border border-line"
+              style={{ background: legendSwatch(1) }}
+              title="High"
+            />
+          </div>
+          <span>High</span>
+        </div>
+        <p className="mt-1 text-xs text-muted">
+          Synthetic OD + fluorescence (illustrative)
+        </p>
       </div>
     </div>
   );

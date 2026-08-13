@@ -194,6 +194,7 @@ export function EtlPage({ showToast }: { showToast: (msg: string) => void }) {
                       {f.id ? (
                         <input
                           type="checkbox"
+                          aria-label={`Select ${f.filename}`}
                           checked={selected.includes(f.id)}
                           onChange={(e) => {
                             setSelected((prev) =>
@@ -220,7 +221,8 @@ export function EtlPage({ showToast }: { showToast: (msg: string) => void }) {
                       {f.id ? (
                         <button
                           type="button"
-                          className="text-accent underline text-xs"
+                          disabled={busy}
+                          className="text-accent underline text-xs disabled:opacity-50"
                           onClick={() => doInspect(f.id)}
                         >
                           Inspect
@@ -396,7 +398,14 @@ export function EtlPage({ showToast }: { showToast: (msg: string) => void }) {
         {loadJob && (
           <section className="rounded-2xl border border-line bg-card p-5 shadow-card space-y-3">
             <h3 className="font-semibold">Load progress</h3>
-            <div className="h-3 overflow-hidden rounded-full bg-canvas">
+            <div
+              className="h-3 overflow-hidden rounded-full bg-canvas"
+              role="progressbar"
+              aria-label="Load progress"
+              aria-valuenow={loadJob.progress_pct || 0}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
               <div
                 className="h-full bg-accent transition-all"
                 style={{ width: `${loadJob.progress_pct || 0}%` }}
@@ -440,7 +449,7 @@ export function EtlPage({ showToast }: { showToast: (msg: string) => void }) {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-canvas px-3 py-2">
-      <div className="text-[10px] uppercase text-muted">{label}</div>
+      <div className="text-xs uppercase text-muted">{label}</div>
       <div className="font-medium">{value}</div>
     </div>
   );
