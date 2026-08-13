@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Bar,
@@ -47,6 +47,8 @@ export function DashboardsPage({ showToast }: { showToast: (msg: string) => void
   const [statusDist, setStatusDist] = useState<Record<string, unknown> | null>(null);
   const [quality, setQuality] = useState<Record<string, unknown> | null>(null);
   const [heatmap, setHeatmap] = useState<Record<string, unknown> | null>(null);
+  const refreshSeq = useRef(0);
+  const debounceRef = useRef(0);
 
   useEffect(() => {
     api
@@ -56,6 +58,7 @@ export function DashboardsPage({ showToast }: { showToast: (msg: string) => void
   }, [showToast]);
 
   async function refresh() {
+    const seq = ++refreshSeq.current;
     try {
       const params = new URLSearchParams();
       params.set("fields", fields.join(","));
@@ -68,12 +71,14 @@ export function DashboardsPage({ showToast }: { showToast: (msg: string) => void
         api.quality(),
         api.wellHeatmap(assayId || undefined),
       ]);
+      if (seq !== refreshSeq.current) return;
       setTimeseries(ts);
       setCompare(cmp);
       setStatusDist(st);
       setQuality(q);
       setHeatmap(hm);
     } catch (e) {
+      if (seq !== refreshSeq.current) return;
       showToast(e instanceof Error ? e.message : "Dashboard query failed");
     }
   }
@@ -89,10 +94,13 @@ export function DashboardsPage({ showToast }: { showToast: (msg: string) => void
 
   // Auto-fetch when filters change; Refresh remains an immediate override.
   useEffect(() => {
-    const handle = window.setTimeout(() => {
+    debounceRef.current = window.setTimeout(() => {
       void refresh();
     }, 300);
-    return () => window.clearTimeout(handle);
+    return () => {
+      window.clearTimeout(debounceRef.current);
+      refreshSeq.current += 1;
+    };
     // refresh closes over current filter values; deps intentionally match ticket scope
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceId, assayId, fields]);
@@ -168,7 +176,10 @@ export function DashboardsPage({ showToast }: { showToast: (msg: string) => void
             </div>
             <button
               type="button"
-              onClick={() => void refresh()}
+              onClick={() => {
+                window.clearTimeout(debounceRef.current);
+                void refresh();
+              }}
               className="rounded-xl bg-accent px-3 py-2 text-sm font-medium text-white"
             >
               Refresh charts
