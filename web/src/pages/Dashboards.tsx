@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Bar,
   BarChart,
@@ -14,16 +15,33 @@ import {
 import { api } from "../lib/api";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 
+const DEFAULT_FIELDS = ["temperature_c", "optical_density", "activity_index"];
+const HEATMAP_COLS = 4;
+
+function parseFieldsParam(raw: string | null): string[] {
+  if (!raw) return [...DEFAULT_FIELDS];
+  const parsed = raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return parsed.length > 0 ? parsed : [...DEFAULT_FIELDS];
+}
+
+function formatQualityKey(key: string): string {
+  return key.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function DashboardsPage({ showToast }: { showToast: (msg: string) => void }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<{
     device_ids: string[];
     assay_run_ids: string[];
     test_names: string[];
     metrics: string[];
   } | null>(null);
-  const [deviceId, setDeviceId] = useState("");
-  const [assayId, setAssayId] = useState("");
-  const [fields, setFields] = useState<string[]>(["temperature_c", "optical_density", "activity_index"]);
+  const [deviceId, setDeviceId] = useState(() => searchParams.get("device") || "");
+  const [assayId, setAssayId] = useState(() => searchParams.get("assay") || "");
+  const [fields, setFields] = useState(() => parseFieldsParam(searchParams.get("fields")));
   const [timeseries, setTimeseries] = useState<Record<string, unknown> | null>(null);
   const [compare, setCompare] = useState<Record<string, unknown> | null>(null);
   const [statusDist, setStatusDist] = useState<Record<string, unknown> | null>(null);
@@ -60,10 +78,24 @@ export function DashboardsPage({ showToast }: { showToast: (msg: string) => void
     }
   }
 
+  // Persist filters in the URL so presenters can deep-link.
   useEffect(() => {
-    refresh();
+    const next = new URLSearchParams();
+    if (deviceId) next.set("device", deviceId);
+    if (assayId) next.set("assay", assayId);
+    next.set("fields", fields.join(","));
+    setSearchParams(next, { replace: true });
+  }, [deviceId, assayId, fields, setSearchParams]);
+
+  // Auto-fetch when filters change; Refresh remains an immediate override.
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      void refresh();
+    }, 300);
+    return () => window.clearTimeout(handle);
+    // refresh closes over current filter values; deps intentionally match ticket scope
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [deviceId, assayId, fields]);
 
   const points = (timeseries?.points as Array<Record<string, unknown>>) || [];
   const compareRows = (compare?.rows as Array<Record<string, unknown>>) || [];
@@ -136,7 +168,7 @@ export function DashboardsPage({ showToast }: { showToast: (msg: string) => void
             </div>
             <button
               type="button"
-              onClick={refresh}
+              onClick={() => void refresh()}
               className="rounded-xl bg-accent px-3 py-2 text-sm font-medium text-white"
             >
               Refresh charts
@@ -249,7 +281,7 @@ export function DashboardsPage({ showToast }: { showToast: (msg: string) => void
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {Object.entries(qualitySummary).map(([k, v]) => (
                   <div key={k} className="rounded-xl bg-canvas px-3 py-2">
-                    <div className="text-[10px] uppercase text-muted">{k}</div>
+                    <div className="text-[10px] text-muted">{formatQualityKey(k)}</div>
                     <div className="font-semibold">{v}</div>
                   </div>
                 ))}
@@ -258,33 +290,67 @@ export function DashboardsPage({ showToast }: { showToast: (msg: string) => void
           </Card>
 
           <Card title="Well × activity heatmap">
-            {cells.length === 0 ? (
-              <Empty />
-            ) : (
-              <div className="grid grid-cols-4 gap-2">
-                {cells.map((c) => {
-                  const act = Number(c.avg_activity || 0);
-                  const intensity = Math.min(1, act / 100);
-                  return (
-                    <div
-                      key={String(c.well_id)}
-                      className="rounded-xl p-3 text-center text-xs text-white"
-                      style={{
-                        background: `rgba(29,107,92,${0.25 + intensity * 0.75})`,
-                      }}
-                      title={`Activity ${act.toFixed(1)}`}
-                    >
-                      <div className="font-mono">{String(c.well_id)}</div>
-                      <div>{act.toFixed(0)}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            {cells.length === 0 ? <Empty /> : <WellActivityHeatmap cells={cells} />}
           </Card>
         </div>
       </div>
     </ErrorBoundary>
+  );
+}
+
+function WellActivityHeatmap({ cells }: { cells: Array<Record<string, unknown>> }) {
+  const byId = new Map(cells.map((c) => [String(c.well_id), c]));
+  let maxIndex = 0;
+  for (const id of byId.keys()) {
+    const row = id.charCodeAt(0) - 65;
+    const col = Number.parseInt(id.slice(1), 10) - 1;
+    if (Number.isFinite(row) && Number.isFinite(col) && row >= 0 && col >= 0) {
+      maxIndex = Math.max(maxIndex, row * HEATMAP_COLS + col);
+    }
+  }
+  const wellCount = Math.max(maxIndex + 1, cells.length, 24);
+  const rowCount = Math.ceil(wellCount / HEATMAP_COLS);
+
+  return (
+    <div
+      className="grid gap-2"
+      style={{ gridTemplateColumns: `auto repeat(${HEATMAP_COLS}, minmax(0, 1fr))` }}
+    >
+      <div />
+      {Array.from({ length: HEATMAP_COLS }, (_, col) => (
+        <div key={`col-${col}`} className="text-center text-[10px] font-medium text-muted">
+          {col + 1}
+        </div>
+      ))}
+      {Array.from({ length: rowCount }, (_, row) => {
+        const rowLetter = String.fromCharCode(65 + row);
+        return (
+          <div key={`row-${rowLetter}`} className="contents">
+            <div className="flex items-center pr-1 text-[10px] font-medium text-muted">{rowLetter}</div>
+            {Array.from({ length: HEATMAP_COLS }, (_, col) => {
+              const wellId = `${rowLetter}${col + 1}`;
+              const cell = byId.get(wellId);
+              const act = Number(cell?.avg_activity || 0);
+              const intensity = Math.min(1, act / 100);
+              return (
+                <div
+                  key={wellId}
+                  className="rounded-xl p-3 text-center text-xs text-ink"
+                  style={{
+                    background: `rgba(29,107,92,${0.12 + intensity * 0.45})`,
+                  }}
+                  title={`Activity ${act.toFixed(1)}`}
+                  aria-label={`Well ${wellId}, activity ${act.toFixed(1)}`}
+                >
+                  <div className="font-mono">{wellId}</div>
+                  <div>{cell ? act.toFixed(0) : "—"}</div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
