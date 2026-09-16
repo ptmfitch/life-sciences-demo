@@ -249,7 +249,7 @@ export function DashboardsPage({ showToast }: { showToast: (msg: string) => void
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {Object.entries(qualitySummary).map(([k, v]) => (
                   <div key={k} className="rounded-xl bg-canvas px-3 py-2">
-                    <div className="text-[10px] uppercase text-muted">{k}</div>
+                    <div className="text-xs uppercase text-muted">{k}</div>
                     <div className="font-semibold">{v}</div>
                   </div>
                 ))}
@@ -265,16 +265,18 @@ export function DashboardsPage({ showToast }: { showToast: (msg: string) => void
                 {cells.map((c) => {
                   const act = Number(c.avg_activity || 0);
                   const intensity = Math.min(1, act / 100);
+                  const wellId = String(c.well_id);
                   return (
                     <div
-                      key={String(c.well_id)}
+                      key={wellId}
                       className="rounded-xl p-3 text-center text-xs text-white"
                       style={{
                         background: `rgba(29,107,92,${0.25 + intensity * 0.75})`,
                       }}
                       title={`Activity ${act.toFixed(1)}`}
+                      aria-label={`${wellId}: activity ${act.toFixed(1)}`}
                     >
-                      <div className="font-mono">{String(c.well_id)}</div>
+                      <div className="font-mono">{wellId}</div>
                       <div>{act.toFixed(0)}</div>
                     </div>
                   );

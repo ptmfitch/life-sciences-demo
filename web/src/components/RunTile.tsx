@@ -7,10 +7,10 @@ import { WellGrid } from "./WellGrid";
 function Metric({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
     <div className="rounded-lg bg-canvas px-2 py-1.5">
-      <div className="text-[10px] uppercase tracking-wide text-muted">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-muted">{label}</div>
       <div className="font-mono text-sm font-medium">
         {value}
-        {unit ? <span className="ml-0.5 text-[10px] text-muted">{unit}</span> : null}
+        {unit ? <span className="ml-0.5 text-xs text-muted">{unit}</span> : null}
       </div>
     </div>
   );
@@ -55,15 +55,15 @@ export function RunTile({
 
       <div className="mb-3 grid grid-cols-3 gap-2 text-xs text-muted">
         <div>
-          <div className="text-[10px] uppercase">Device</div>
+          <div className="text-xs uppercase">Device</div>
           <div className="font-mono text-ink">{run.device_id}</div>
         </div>
         <div>
-          <div className="text-[10px] uppercase">Rack</div>
+          <div className="text-xs uppercase">Rack</div>
           <div className="font-mono text-ink">{run.rack_id}</div>
         </div>
         <div>
-          <div className="text-[10px] uppercase">Wells</div>
+          <div className="text-xs uppercase">Wells</div>
           <div className="font-mono text-ink">{run.well_count}</div>
         </div>
       </div>
@@ -73,16 +73,16 @@ export function RunTile({
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Metric label="Temp" value={fmt(latest?.temperature_c, 2)} unit="°C" />
         <Metric label="pH" value={fmt(latest?.ph, 2)} />
-        <Metric label="OD" value={fmt(latest?.optical_density, 3)} />
-        <Metric label="Fluo" value={fmt(latest?.fluorescence_rfu, 0)} unit="RFU" />
-        <Metric label="DO" value={fmt(latest?.dissolved_oxygen_pct, 1)} unit="%" />
+        <Metric label="Optical density" value={fmt(latest?.optical_density, 3)} />
+        <Metric label="Fluorescence" value={fmt(latest?.fluorescence_rfu, 0)} unit="RFU" />
+        <Metric label="Dissolved O₂" value={fmt(latest?.dissolved_oxygen_pct, 1)} unit="%" />
         <Metric label="Reagent" value={fmt(latest?.reagent_concentration_mg_l, 1)} unit="mg/L" />
         <Metric label="Activity" value={fmt(latest?.activity_index, 1)} />
         <Metric label="Rows / files" value={`${run.row_count} / ${run.file_count}`} />
       </div>
 
       <div className="mt-3">
-        <div className="mb-1 text-[10px] uppercase tracking-wide text-muted">
+        <div className="mb-1 text-xs uppercase tracking-wide text-muted">
           Activity index (demo)
         </div>
         <Sparkline values={run.sparkline} />
