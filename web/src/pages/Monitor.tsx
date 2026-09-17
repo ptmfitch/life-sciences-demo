@@ -70,7 +70,7 @@ export function MonitorPage({
         <section className="rounded-2xl border border-line bg-card p-5 shadow-card">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="text-xl font-semibold">Live monitoring</h2>
+              <h2 className="text-xl font-semibold">Live Monitoring</h2>
               <p className="mt-1 max-w-2xl text-sm text-muted">
                 Start and control synthetic AstraLume BioTest Station runs. Visuals are
                 illustrative — not scientifically validated.
