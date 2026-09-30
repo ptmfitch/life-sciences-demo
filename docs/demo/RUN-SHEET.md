@@ -8,7 +8,7 @@ Audience: regulated pharma engineering. Length: about 10 minutes. Story: a bug i
 
 This sheet says **the reported bug**. The symptom text, the repro clicks, and the cause live in the description of the pull request that added this kit. Do not read a root cause or a file path out loud.
 
-Repository hooks are a later step. This demo does not ship a `hooks.json` or any other Cursor hooks file.
+What the repository hooks allow and deny is in [HOOKS.md](HOOKS.md).
 
 ## Pre-flight
 
