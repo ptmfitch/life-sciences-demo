@@ -42,8 +42,8 @@ Open **http://localhost:5173**.
 3. Pause / resume / stop individual runs; try bulk controls.
 4. Confirm CSVs appear in `data/telemetry/`.
 5. Open **ETL**, rescan, inspect a file, review mapping, dry run, then load.
-6. Open **Dashboards** and refresh charts.
-7. Rescan and load again — already-ingested files are skipped.
+6. Open **Dashboards**. The specimen acceptance panel dispositions reference standards and any loaded assay averages. **Recalculate dispositions** appends an audit event. Refresh charts for the historical views.
+7. Rescan and load again — already-ingested files are skipped. Each load appends an audit event.
 
 ## Simulation speed
 
@@ -74,8 +74,17 @@ cd server && uv run pytest -q
 
 - **FastAPI** process runs each assay as an **asyncio task** (no subprocesses)
 - **SSE** streams `snapshot`, `run_state`, `telemetry`, `etl_progress`
-- **Postgres** holds run metadata, source-file registry, raw + typed telemetry
+- **Postgres** holds run metadata, source-file registry, raw + typed telemetry, and append-only audit events
+- **Specimen acceptance** (`server/app/validated/`) dispositions reference standards, loaded assay averages, and live readings shown on Dashboards and Monitor
 - **React + Vite + Tailwind + Recharts** for Monitor / ETL / Dashboards
+
+## Regulated SDLC demo
+
+This repository is the local base for a short live demo of a regulated software change: a bug report in Slack, a cloud agent draft pull request, Bugbot review rules, an evidence-pack comment, and a reviewer that stops for human approval.
+
+Presenter run-sheet: [docs/demo/RUN-SHEET.md](docs/demo/RUN-SHEET.md).
+
+Specimen acceptance (`server/app/validated/`) and the audit trail (`server/app/audit_trail/`) are illustrative. The tooling produces evidence for your validated process. Limits on the acceptance panel are synthetic.
 
 ## Non-goals
 

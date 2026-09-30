@@ -1,10 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { Run } from "../lib/types";
+import { asSpecResult, specResultClass } from "../lib/specResult";
 import { Sparkline } from "./Sparkline";
 import { StatusBadge } from "./StatusBadge";
 import { WellGrid } from "./WellGrid";
 
-function Metric({ label, value, unit }: { label: string; value: string; unit?: string }) {
+function Metric({
+  label,
+  value,
+  unit,
+  extra,
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+  extra?: ReactNode;
+}) {
   return (
     <div className="rounded-lg bg-canvas px-2 py-1.5">
       <div className="text-xs uppercase tracking-wide text-muted">{label}</div>
@@ -12,6 +23,7 @@ function Metric({ label, value, unit }: { label: string; value: string; unit?: s
         {value}
         {unit ? <span className="ml-0.5 text-xs text-muted">{unit}</span> : null}
       </div>
+      {extra}
     </div>
   );
 }
@@ -19,6 +31,18 @@ function Metric({ label, value, unit }: { label: string; value: string; unit?: s
 function fmt(n: number | null | undefined, digits = 2) {
   if (n == null || Number.isNaN(n)) return "—";
   return n.toFixed(digits);
+}
+
+function SpecMark({ overall }: { overall: string | undefined }) {
+  const result = asSpecResult(overall);
+  if (!result) return null;
+  return (
+    <span
+      className={`mt-0.5 inline-flex rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${specResultClass(result)}`}
+    >
+      Spec {result}
+    </span>
+  );
 }
 
 export function RunTile({
@@ -77,7 +101,14 @@ export function RunTile({
         <Metric label="Fluorescence" value={fmt(latest?.fluorescence_rfu, 0)} unit="RFU" />
         <Metric label="Dissolved O₂" value={fmt(latest?.dissolved_oxygen_pct, 1)} unit="%" />
         <Metric label="Reagent" value={fmt(latest?.reagent_concentration_mg_l, 1)} unit="mg/L" />
-        <Metric label="Activity" value={fmt(latest?.activity_index, 1)} />
+        <Metric
+          label="Activity"
+          value={fmt(
+            latest?.spec_disposition?.reported_activity ?? latest?.activity_index,
+            1
+          )}
+          extra={<SpecMark overall={latest?.spec_disposition?.overall} />}
+        />
         <Metric label="Rows / files" value={`${run.row_count} / ${run.file_count}`} />
       </div>
 

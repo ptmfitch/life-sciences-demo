@@ -435,8 +435,9 @@ export function EtlPage({ showToast }: { showToast: (msg: string) => void }) {
             ) : null}
             {loadJob.status === "complete" ? (
               <div className="text-sm text-healthy">
-                Load complete. Open Dashboards to visualise historical telemetry. Re-running
-                load will skip already-ingested files.
+                Load complete. An append-only audit event was recorded for this load.
+                Open Dashboards for charts, specimen acceptance, and the audit trail.
+                Re-running load will skip already-ingested files.
               </div>
             ) : null}
           </section>

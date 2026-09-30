@@ -79,4 +79,10 @@ export const api = {
     request<Record<string, unknown>>(
       `/dash/well-heatmap${assay_run_id ? `?assay_run_id=${encodeURIComponent(assay_run_id)}` : ""}`
     ),
+  acceptance: () => request<import("./types").AcceptanceReport>("/dash/acceptance"),
+  recalculateAcceptance: () =>
+    request<import("./types").AcceptanceReport>("/dash/acceptance/recalculate", {
+      method: "POST",
+    }),
+  auditEvents: () => request<import("./types").AuditEvent[]>("/audit"),
 };

@@ -1,10 +1,22 @@
 """Dashboard aggregate endpoints."""
 
+from decimal import Decimal
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.audit_trail.records import acceptance_recalculation_record
+from app.audit_trail.store import insert_audit_event, list_audit_events
 from app.db import get_session
+from app.validated.acceptance import (
+    REFERENCE_SPECIMENS,
+    AcceptanceBatch,
+    SpecimenInput,
+    disposition_to_dict,
+    recalculate_acceptance,
+    spec_payload,
+)
 
 router = APIRouter(prefix="/dash", tags=["dashboards"])
 
@@ -168,3 +180,67 @@ async def filters(session: AsyncSession = Depends(get_session)):
         "test_names": [r[0] for r in tests.fetchall()],
         "metrics": sorted(ALLOWED_METRICS),
     }
+
+
+async def _loaded_specimens(session: AsyncSession) -> list[SpecimenInput]:
+    result = await session.execute(
+        text(
+            """
+            SELECT assay_run_id, test_name,
+                   AVG(activity_index) AS avg_activity,
+                   AVG(temperature_c) AS avg_temperature
+            FROM telemetry_readings
+            WHERE activity_index IS NOT NULL
+              AND temperature_c IS NOT NULL
+            GROUP BY assay_run_id, test_name
+            ORDER BY test_name, assay_run_id
+            LIMIT 12
+            """
+        )
+    )
+    specimens: list[SpecimenInput] = []
+    for row in result.mappings().all():
+        label = f"{row['test_name']} ({row['assay_run_id']})"
+        specimens.append(
+            SpecimenInput(
+                label=label,
+                activity_index=Decimal(str(row["avg_activity"])),
+                temperature_c=Decimal(str(row["avg_temperature"])),
+            )
+        )
+    return specimens
+
+
+def _acceptance_body(batch: AcceptanceBatch, loaded_count: int) -> dict:
+    body = spec_payload()
+    body["reference_specimens"] = [disposition_to_dict(item) for item in batch.reference]
+    body["loaded_runs"] = [disposition_to_dict(item) for item in batch.loaded]
+    body["loaded_run_count"] = loaded_count
+    return body
+
+
+@router.get("/acceptance")
+async def acceptance(session: AsyncSession = Depends(get_session)):
+    loaded = await _loaded_specimens(session)
+    batch = recalculate_acceptance(REFERENCE_SPECIMENS, loaded)
+    return _acceptance_body(batch, len(loaded))
+
+
+@router.post("/acceptance/recalculate")
+async def recalculate(session: AsyncSession = Depends(get_session)):
+    loaded = await _loaded_specimens(session)
+    batch = recalculate_acceptance(REFERENCE_SPECIMENS, loaded)
+    outcomes = (*batch.reference, *batch.loaded)
+    pass_count = sum(1 for item in outcomes if item.overall == "PASS")
+    fail_count = sum(1 for item in outcomes if item.overall == "FAIL")
+    record = acceptance_recalculation_record(
+        specimen_count=len(outcomes),
+        pass_count=pass_count,
+        fail_count=fail_count,
+        loaded_run_count=len(batch.loaded),
+    )
+    await insert_audit_event(session, record)
+    await session.commit()
+    body = _acceptance_body(batch, len(loaded))
+    body["audit_events"] = await list_audit_events(session, limit=8)
+    return body
