@@ -220,6 +220,7 @@ __marimo__/
 # Demo app
 data/telemetry/*.csv
 !data/telemetry/.gitkeep
+audit_trail/agent-hooks.log
 node_modules/
 web/dist/
 .DS_Store

@@ -36,6 +36,7 @@ export interface TelemetryReading {
   status: string;
   quality_flag: string;
   wells?: WellState[];
+  spec_disposition?: SpecDisposition | null;
 }
 
 export interface Run {
@@ -103,3 +104,39 @@ export interface EtlJob {
 }
 
 export type ConnectionState = "live" | "reconnecting" | "offline";
+
+export type SpecResult = "PASS" | "FAIL";
+
+export interface SpecDisposition {
+  label: string;
+  reported_activity: number;
+  temperature_c: number;
+  activity_result: SpecResult;
+  temperature_result: SpecResult;
+  overall: SpecResult;
+}
+
+export interface AcceptanceReport {
+  disclaimer: string;
+  activity_rule: string;
+  temperature_rule: string;
+  activity_upper_limit: number;
+  activity_decimals: number;
+  temperature_low_c: number;
+  temperature_high_c: number;
+  reference_specimens: SpecDisposition[];
+  loaded_runs: SpecDisposition[];
+  loaded_run_count: number;
+  audit_events?: AuditEvent[];
+}
+
+export interface AuditEvent {
+  id: string;
+  recorded_at: string;
+  actor: string;
+  action: string;
+  reason: string;
+  subject_type: string;
+  subject_id: string;
+  details: Record<string, unknown>;
+}

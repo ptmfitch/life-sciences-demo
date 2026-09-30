@@ -12,6 +12,8 @@ import {
   YAxis,
 } from "recharts";
 import { api } from "../lib/api";
+import type { AcceptanceReport, AuditEvent } from "../lib/types";
+import { AcceptancePanel } from "../components/AcceptancePanel";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 
 export function DashboardsPage({ showToast }: { showToast: (msg: string) => void }) {
@@ -29,6 +31,9 @@ export function DashboardsPage({ showToast }: { showToast: (msg: string) => void
   const [statusDist, setStatusDist] = useState<Record<string, unknown> | null>(null);
   const [quality, setQuality] = useState<Record<string, unknown> | null>(null);
   const [heatmap, setHeatmap] = useState<Record<string, unknown> | null>(null);
+  const [acceptance, setAcceptance] = useState<AcceptanceReport | null>(null);
+  const [audit, setAudit] = useState<AuditEvent[]>([]);
+  const [acceptanceBusy, setAcceptanceBusy] = useState(false);
 
   useEffect(() => {
     api
@@ -43,18 +48,22 @@ export function DashboardsPage({ showToast }: { showToast: (msg: string) => void
       params.set("fields", fields.join(","));
       if (deviceId) params.set("device_id", deviceId);
       if (assayId) params.set("assay_run_id", assayId);
-      const [ts, cmp, st, q, hm] = await Promise.all([
+      const [ts, cmp, st, q, hm, acc, events] = await Promise.all([
         api.timeseries(params),
         api.compare("activity_index"),
         api.statusDistribution(),
         api.quality(),
         api.wellHeatmap(assayId || undefined),
+        api.acceptance(),
+        api.auditEvents(),
       ]);
       setTimeseries(ts);
       setCompare(cmp);
       setStatusDist(st);
       setQuality(q);
       setHeatmap(hm);
+      setAcceptance(acc);
+      setAudit(events);
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Dashboard query failed");
     }
@@ -76,9 +85,28 @@ export function DashboardsPage({ showToast }: { showToast: (msg: string) => void
     demo_attention_threshold: 72,
   }));
 
+  async function recalculate() {
+    setAcceptanceBusy(true);
+    try {
+      const acc = await api.recalculateAcceptance();
+      setAcceptance(acc);
+      setAudit(acc.audit_events ?? []);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Recalculation failed");
+    } finally {
+      setAcceptanceBusy(false);
+    }
+  }
+
   return (
     <ErrorBoundary title="Dashboards page error">
       <div className="space-y-6">
+        <AcceptancePanel
+          report={acceptance}
+          audit={audit}
+          busy={acceptanceBusy}
+          onRecalculate={recalculate}
+        />
         <section className="rounded-2xl border border-line bg-card p-5 shadow-card">
           <h2 className="text-xl font-semibold">Historical dashboards</h2>
           <p className="mt-1 text-sm text-muted">

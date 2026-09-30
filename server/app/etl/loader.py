@@ -12,6 +12,8 @@ from uuid import UUID, uuid4
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.audit_trail.records import etl_load_record
+from app.audit_trail.store import insert_audit_event
 from app.etl.inspector import DEFAULT_MAPPING
 from app.runs.events import broker
 from app.sim.simulator import CSV_COLUMNS
@@ -390,6 +392,18 @@ async def run_etl(
         "warning_total": len(warnings),
         "reject_total": len(rejects),
     }
+
+    if not dry_run:
+        await insert_audit_event(
+            session,
+            etl_load_record(
+                job_id=str(job_id),
+                inserted_rows=counters["inserted_rows"],
+                skipped_rows=counters["skipped_rows"],
+                rejected_rows=counters["rejected_rows"],
+                file_count=len(file_ids),
+            ),
+        )
 
     await session.execute(
         text(

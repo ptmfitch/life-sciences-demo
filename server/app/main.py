@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.audit_trail.router import router as audit_router
 from app.config import settings
 from app.db import SessionLocal, apply_migrations
 from app.etl.router import router as etl_router
@@ -42,6 +43,7 @@ app.add_middleware(
 app.include_router(runs_router, prefix="/api")
 app.include_router(etl_router, prefix="/api")
 app.include_router(dash_router, prefix="/api")
+app.include_router(audit_router, prefix="/api")
 
 
 @app.get("/api/health")

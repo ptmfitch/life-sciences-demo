@@ -16,6 +16,7 @@ from app.db import SessionLocal
 from app.runs.events import EventBroker
 from app.sim.simulator import RunIdentity, Simulator, regime_for_compound
 from app.sim.writer import build_filename, maybe_duplicate_row, write_csv
+from app.validated.acceptance import disposition_for_reading
 
 logger = logging.getLogger(__name__)
 
@@ -406,12 +407,22 @@ class RunManager:
                 # Drop ephemeral keys before buffering for CSV
                 csv_row = {k: v for k, v in reading.items() if k != "wells"}
                 self._row_buffers[run_id].append(csv_row)
-                self.broker.record_telemetry(run_id, reading)
+                ui_reading = {
+                    k: v for k, v in reading.items() if k != "_duplicate_candidate"
+                }
+                spec = disposition_for_reading(
+                    reading.get("activity_index"),
+                    reading.get("temperature_c"),
+                    str(reading.get("sample_id") or reading.get("well_id") or ""),
+                )
+                if spec is not None:
+                    ui_reading["spec_disposition"] = spec
+                self.broker.record_telemetry(run_id, ui_reading)
 
                 now = datetime.now(timezone.utc)
                 payload = {
                     "run_id": str(run_id),
-                    "reading": {k: v for k, v in reading.items() if k != "_duplicate_candidate"},
+                    "reading": ui_reading,
                     "tick_index": tick,
                 }
                 await self.broker.publish("telemetry", payload)
