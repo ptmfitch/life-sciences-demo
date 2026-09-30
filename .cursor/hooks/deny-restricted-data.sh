@@ -2,6 +2,7 @@
 # beforeReadFile: the matcher only sees the tool name, so the path check is here.
 # Denies restricted/, *.phi, *.pii, and .env*. Never returns "ask".
 exec python3 -c "$(cat <<'PY'
+from __future__ import annotations
 import fnmatch
 import json
 import sys

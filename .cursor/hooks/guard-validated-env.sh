@@ -2,6 +2,7 @@
 # beforeShellExecution: deny kubectl/terraform/psql aimed at a validated or prod target.
 # Local development commands are allowed. Never returns "ask".
 exec python3 -c "$(cat <<'PY'
+from __future__ import annotations
 import json
 import re
 import sys

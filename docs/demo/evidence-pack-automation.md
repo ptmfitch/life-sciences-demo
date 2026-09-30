@@ -2,7 +2,9 @@ DEMO / SYNTHETIC · for enablement only
 
 # Automation instructions — Compliance Evidence Pack
 
-Paste the block below into a Cursor Automation whose trigger is **pull request opened** and **pull request pushed** (synchronize). Point the automation at this repository.
+Paste the block below into a Cursor Automation whose triggers are **Draft opened**, **Pull request pushed**, and **Pull request opened**. Point the automation at this repository.
+
+**Draft opened** is the trigger for a draft pull request. **Pull request opened** covers only a non-draft pull request, or a draft that is marked ready. Keep both, plus **Pull request pushed** for later pushes.
 
 The automation posts a pull request comment. It does not approve, request changes through a formal review approval, merge, or edit the branch unless the comment tool requires nothing else.
 
@@ -49,7 +51,7 @@ QA has not accepted this tier.
 <command, outcome, and scope — or "not run in this session">
 
 ### Bugbot findings
-<table or list: title, blocking or not, open or resolved>
+<table or list: title, flagged or not, open or resolved>
 If none are visible: "No Bugbot review observed in this session."
 
 ### Open questions for QA

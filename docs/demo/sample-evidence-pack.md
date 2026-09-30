@@ -38,7 +38,7 @@ The repository's check is `cd server && uv run pytest -q`. This example assumes 
 
 ### Bugbot findings
 
-| Finding | Blocking | Status |
+| Finding | Flagged | Status |
 | --- | --- | --- |
 | Missing change control reference | yes | open — description has no new `CR-#####`. `CR-00042` is the example baseline and does not identify this change |
 | Missing test evidence | yes | open — validated code is in the diff and `server/tests/` is not |

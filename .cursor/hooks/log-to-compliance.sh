@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # afterFileEdit and stop: append one JSON line and always allow.
 exec python3 -c "$(cat <<'PY'
+from __future__ import annotations
 import json
 import os
 import sys

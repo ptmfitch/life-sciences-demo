@@ -15,18 +15,19 @@ What the repository hooks allow and deny is in [HOOKS.md](HOOKS.md).
 Do this before the room, not during the ten minutes.
 
 - [ ] Merge the demo-kit pull request yourself (or set the cloud agent's base branch to that branch). This sheet does not merge it. The live fix must branch from the kit so `server/app/validated/`, `.cursor/BUGBOT.md`, and `docs/` are on the base.
-- [ ] Bugbot is enabled for the repository and will read `.cursor/BUGBOT.md`.
-- [ ] A Cursor Automation exists for **pull request opened** and **pull request pushed**. Its instructions are the paste block in [evidence-pack-automation.md](evidence-pack-automation.md). It has permission to comment on pull requests.
+- [ ] Bugbot is enabled for the repository, will read `.cursor/BUGBOT.md`, and has **Enable reviews on draft PRs** switched on. Bugbot skips draft pull requests until that switch is on.
+- [ ] Making the Bugbot check required in branch protection is what turns flags into a merge block.
+- [ ] A Cursor Automation exists for **Draft opened**, **Pull request pushed**, and **Pull request opened**. Drafts need **Draft opened**; **Pull request opened** covers only a non-draft pull request or a draft marked ready. Instructions are the paste block in [evidence-pack-automation.md](evidence-pack-automation.md). It has permission to comment on pull requests.
 - [ ] A Slack channel is connected to a Cursor cloud agent. You can hand it a bug report from that channel.
 - [ ] MCPs the agents should call (GitHub, Slack, anything else) are connected at **team** level in the Cursor dashboard. Cloud agents do not use MCP servers configured only on your laptop.
-- [ ] The GitHub connection can open a **draft** pull request. On a scratch run, confirm whether the commit shows GitHub's Verified badge. If it does not, drop the "signed commit" sentence and keep going.
+- [ ] The GitHub connection can open a **draft** pull request. Every cloud-agent commit is signed. On a scratch run, eyeball the **Verified** badge on the commit.
 - [ ] Local console, only if you will show the symptom: `cp .env.example .env`, `make install`, `make server`, `make web`, then open http://localhost:5173. Postgres per the README.
 - [ ] Copy the paste-ready Slack bug report from the demo-kit pull request description. Do not add a change-request id. Do not add a suspected cause. `CR-00042` is an example record and must not be pasted into that message.
 - [ ] Have these tabs ready: Slack, the Cursor agent run, the GitHub draft pull request, Bugbot, this repo at `docs/demo/sample-evidence-pack.md`, `docs/sop-demo-017-change-control.md`, and `docs/demo/compliance-reviewer-skill.md`.
 
 | In the repository already | You configure in Cursor, Slack, and GitHub |
 | --- | --- |
-| Acceptance calculation, audit trail, tests, Bugbot rules, SOP-DEMO-017, validation plan, example CR-00042, this run-sheet, the evidence-pack instructions, the sample comment, the reviewer instructions | Bugbot on the repo, the automation, the Slack-to-cloud-agent connection, team-level MCPs, draft-PR permissions, optional commit signing, merging this kit onto the branch the agent starts from |
+| Acceptance calculation, audit trail, tests, Bugbot rules, SOP-DEMO-017, validation plan, example CR-00042, this run-sheet, the evidence-pack instructions, the sample comment, the reviewer instructions, the hook scripts | Bugbot on the repo with reviews on draft PRs, the Bugbot check required in branch protection when flags should block a merge, the automation (Draft opened, Pull request pushed, and Pull request opened), the Slack-to-cloud-agent connection, team-level MCPs, draft-PR permissions, merging this kit onto the branch the agent starts from |
 
 ## Beat 1 — Slack report (0:00–2:00)
 
@@ -41,20 +42,20 @@ Do this before the room, not during the ten minutes.
 
 ## Beat 2 — Cloud agent draft pull request (2:00–4:30)
 
-**Say:** "The agent should fix the reported bug and open a draft pull request. I want a draft, and I want the commit signed if this GitHub connection verifies cloud-agent commits."
+**Say:** "The agent should fix the reported bug and open a draft pull request. Every cloud-agent commit is signed."
 
 **Click:**
 
 1. Open the agent run. Wait until it pushes a branch and opens a pull request.
 2. Show the pull request is a **draft**.
-3. Open the commit. If GitHub shows **Verified**, say the commit is signed. If not, say signing is not on for this connection and move on.
+3. Open the commit and show GitHub's **Verified** badge.
 4. Show the diff is small. Do not narrate the fix.
 
 **Fallback:** If the agent is still running at 4:30, leave it on screen and switch to the pre-baked path: "Live generation is still going. I will use the example comment and the SOP so we keep the clock, and we can flip back if the draft appears." Do not invent a diff.
 
 ## Beat 3 — Bugbot (4:30–6:30)
 
-**Say:** "Bugbot is using the rules in `.cursor/BUGBOT.md`. For a change under the validated package I expect a blocking finding when the description has no new change-request id, and another when the diff has no test change. An audit-trail edit would ask for a QA impact assessment. The review should also end with a regulatory-impact tier: none, minor, or revalidation likely."
+**Say:** "Bugbot is using the rules in `.cursor/BUGBOT.md`. For a change under the validated package I expect a flagged finding when the description has no new change-request id, and another when the diff has no test change. An audit-trail edit would ask for a QA impact assessment. The review should also end with a regulatory-impact tier: none, minor, or revalidation likely. Those flags become a merge block only when the Bugbot check is required in branch protection."
 
 **Click:**
 
@@ -90,7 +91,7 @@ Do this before the room, not during the ten minutes.
 
 ## Close (9:30–10:00)
 
-**Say:** "What you saw is evidence for a process you already validate: a report, a draft change, blocking review rules, a pack a QA reader can scan, and a stop for a person. The console is synthetic. I am not merging."
+**Say:** "What you saw is evidence for a process you already validate: a report, a draft change, review rules that flag findings, a pack a QA reader can scan, and a stop for a person. The console is synthetic. I am not merging."
 
 Leave the fix pull request as a draft.
 
