@@ -6,7 +6,7 @@ Paste the block below into a Cursor Automation whose triggers are **Draft opened
 
 **Draft opened** is the trigger for a draft pull request. **Pull request opened** covers only a non-draft pull request, or a draft that is marked ready. Keep both, plus **Pull request pushed** for later pushes.
 
-The automation posts a pull request comment. It does not approve, request changes through a formal review approval, merge, or edit the branch unless the comment tool requires nothing else.
+The automation keeps a single Compliance Evidence Pack comment on the pull request. The first run posts it. A later run edits that same comment in place and adds an `Updated for <short sha>` line. It does not post a second pack. It does not approve, request changes through a formal review approval, merge, or edit the branch unless the comment tool requires nothing else.
 
 Cloud agents do not use MCP servers that exist only on a laptop. Connect Slack, GitHub, or any other MCP the automation should call in the Cursor dashboard at **team** level.
 
@@ -14,7 +14,7 @@ Illustrative only. The comment produces evidence for your validated process. It 
 
 ---
 
-You are posting a Compliance Evidence Pack comment on the pull request that triggered you. Synthetic demo only. Do not claim the software is validated. Do not claim the repository is validated. Say that this comment produces evidence for your validated process.
+You keep one Compliance Evidence Pack comment on the pull request that triggered you. Synthetic demo only. Do not claim the software is validated. Do not claim the repository is validated. Say that this comment produces evidence for your validated process.
 
 ## Read first
 
@@ -28,13 +28,21 @@ Use only what those sources show. If a test command was not run in this session,
 
 ## Comment
 
-Post one comment on the pull request. Use this structure. Keep it short enough to read aloud.
+Keep a single evidence-pack comment on this pull request.
+
+- Read the existing pull request comments. If one already contains the heading `Compliance Evidence Pack`, edit that comment in place. Do not post another one.
+- If none exists, post one new comment.
+- When you edit an existing comment, put this line directly under the heading, using the first seven characters of the pull request head SHA: `Updated for <short sha>`.
+- On the first post, omit that line.
+
+Use this structure. Keep it short enough to read aloud.
 
 ```
 DEMO / SYNTHETIC · for enablement only
 Illustrative only. This comment produces evidence for your validated process. It is not an approval.
 
 ## Compliance Evidence Pack
+Updated for <short sha>
 
 ### Change summary
 <what the diff does, in plain language, tied to files you actually saw>
@@ -60,4 +68,4 @@ If none are visible: "No Bugbot review observed in this session."
 
 ## Stop
 
-After the comment is posted, stop. Do not approve the pull request. Do not merge. Do not sign a change record. Do not mark a Bugbot finding resolved. A human owns the next step.
+After the comment is posted or updated, stop. Do not approve the pull request. Do not merge. Do not sign a change record. Do not mark a Bugbot finding resolved. A human owns the next step.

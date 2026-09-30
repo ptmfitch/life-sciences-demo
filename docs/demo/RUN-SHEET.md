@@ -67,7 +67,7 @@ Do this before the room, not during the ten minutes.
 
 ## Beat 4 — Evidence pack (6:30–8:00)
 
-**Say:** "A separate automation comments a Compliance Evidence Pack: summary, requirement ids, a risk tier, tests, Bugbot status, and questions for QA. The tier is a proposal. QA has not accepted it."
+**Say:** "A separate automation comments a Compliance Evidence Pack: summary, requirement ids, a risk tier, tests, Bugbot status, and questions for QA. The tier is a proposal. QA has not accepted it. The pack updates in place on later pushes."
 
 **Click:**
 
